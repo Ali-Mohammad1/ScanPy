@@ -2,7 +2,7 @@ from pathlib import Path
 import logging
 import re
 import ipaddress
-import system
+import sys
 
 #set up the logger
 def setup_logger(file_name:str = "scanning_log.log", verbose:bool = False):
@@ -60,7 +60,7 @@ def validate_and_parse_ip_cidr(input_ip: str, logger):
             logger.error(f"Invalid IP/CIDR: {candidate} - {e}")
             sys.exit(1)
             
-    # check 
+    # check if the input contains a CIDR prefix
     if '/' in input_str:
         try:
             ipaddress.ip_interface(input_str)
@@ -84,3 +84,4 @@ def validate_and_parse_ip_cidr(input_ip: str, logger):
             except ValueError:
                 logger.error(f"Invalid IP address again: {second}")
                 sys.exit(1)
+                
