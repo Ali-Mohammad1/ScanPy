@@ -25,7 +25,7 @@ def clear():
     os.system('clear')
 
 
-def scan_hosts_ipv4(input_ip:str,packets:int = 4,range_of_hosts:int,timeout:int = 4, verbose:bool = False,logger):
+def scan_hosts_ipv4(logger,input_ip:str,packets:int = 4,range_of_hosts:int=254,timeout:int = 4, verbose:bool = False):
 
   logger.Info("Scanning IPv4 network...")
     
@@ -94,11 +94,11 @@ def scan_hosts_ipv6():
   
   
   
-def check_type(input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4,verbose:bool=False,logger):
+def check_type(logger,input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4,verbose:bool=False):
   ip_add = ipaddress.ip_network(validate_and_parse_ip_cidr(input_ip, logger), strict=False)
   
   if ip_add.version == 4:
-    return scan_hosts_ipv4(input_ip,packets,range_of_hosts, timeout, verbose, logger)
+    return scan_hosts_ipv4(logger,input_ip, packets ,range_of_hosts, timeout, verbose)
   
   elif ip_add.version == 6:
     pass
