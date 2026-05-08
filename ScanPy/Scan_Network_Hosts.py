@@ -1,7 +1,7 @@
 import ipaddress
 import sys
 import subprocess
-from Verification import validate_and_parse_ip_cidr,
+from Verification import validate_and_parse_ip_cidr
 from time import sleep
 import os
 
@@ -41,7 +41,7 @@ def scan_hosts_ipv4(input_ip:str,packets:int = 4,range_of_hosts:int,timeout:int 
   
   
   for ip in iterator:
-    command = ["ping", "-c", str(packets), "-W", str(timeout), str(ip)]]]
+    command = ["ping", "-c", str(packets), "-W", str(timeout), str(ip)]
      
     try:
       
@@ -49,7 +49,7 @@ def scan_hosts_ipv4(input_ip:str,packets:int = 4,range_of_hosts:int,timeout:int 
       result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,timeout= timeout + 1)
        
       if verbose:
-        logger.debug(f"Pinging {ip} with {packets} packets and timeout of {timeout} seconds..."))
+        logger.debug(f"Pinging {ip} with {packets} packets and timeout of {timeout} seconds...")
         if result.returncode == 0:
           logger.debug(f"Host {ip} is alive.)")
           alive_hosts.append(str(ip))
@@ -57,7 +57,7 @@ def scan_hosts_ipv4(input_ip:str,packets:int = 4,range_of_hosts:int,timeout:int 
         else:
           logger.debug(f"Host {ip} is not responding.)")
       
-      else:
+      
     except subprocess.TimeoutExpired:
       logger.Error("Ping command timed out. Please check your network connection and try again.")
        
@@ -77,10 +77,13 @@ def scan_hosts_ipv4(input_ip:str,packets:int = 4,range_of_hosts:int,timeout:int 
       logger.Error(f"An error occurred while scanning: {e}")
      
   logger.Info("Scan completed successfully.")
-       
-       
-    
-    
+  logger.info(f"Alive hosts: {len(alive_hosts)})")
+  for n , host in enumerate(alive_hosts, start=1):
+    logger.info(f"{n}. {host}")
+  sleep(4)
+  clear()
+  return alive_hosts
+        
     
 def scan_hosts_ipv6():
   pass
@@ -91,12 +94,13 @@ def scan_hosts_ipv6():
   
   
   
-def check_type(input_ip:str,packets:int = 4,range_of_hosts:int,timeout:int = 4, verbose:bool = False,logger):):
+def check_type(input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4,verbose:bool=False,logger):
   ip_add = ipaddress.ip_network(validate_and_parse_ip_cidr(input_ip, logger), strict=False)
   
   if ip_add.version == 4:
     return scan_hosts_ipv4(input_ip,packets,range_of_hosts, timeout, verbose, logger)
   
   elif ip_add.version == 6:
-    return scan_hosts_ipv6(input_ip, packets,range_of_hosts, timeout, verbose, logger)
+    pass
+    #return scan_hosts_ipv6(input_ip,packets,range_of_hosts, timeout, verbose, logger)
   
