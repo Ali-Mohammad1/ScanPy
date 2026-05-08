@@ -19,10 +19,7 @@ except ImportError:
     from tqdm import tqdm
     
 def clear():
-  if os.name == 'nt':
-    os.system('cls')
-  else:
-    os.system('clear')
+  os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def scan_hosts_ipv4(logger,input_ip:str,packets:int = 4,range_of_hosts:int=254,timeout:int = 4, verbose:bool = False):
@@ -85,10 +82,8 @@ def scan_hosts_ipv4(logger,input_ip:str,packets:int = 4,range_of_hosts:int=254,t
   return alive_hosts
         
     
-def scan_hosts_ipv6():
+def scan_hosts_ipv6(logger,input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4, verbose:bool=False):
   pass
-  
-  
   
   
   
