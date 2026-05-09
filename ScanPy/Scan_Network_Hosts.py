@@ -2,23 +2,25 @@ import ipaddress
 import sys
 import subprocess
 from Verification import validate_and_parse_ip_cidr
-from time import sleep
+from time import sleep,time
 import os
+import shutil
 
-try:
-  from tqdm import tqdm
-except ImportError:
-  print("tqdm library not found. Please install it using 'pip install tqdm' for better progress visualization.")
-  
-  ask = input("Do you want to install tqdm here (y/n): ").strip().lower()
-  if ask != 'y':
-    sys.exit("Exiting. Please install tqdm and try again.")
-  
-  else:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "tqdm"])
-    from tqdm import tqdm
+def check_fping_existence(logger):
+  if shutil.which("fping") is None:
+    logger.Error("fping is not installed. Please install fping to use this feature.")
+    logger.info("You can install fping using the following command:")
+    logger.info("For Debian/Ubuntu: sudo apt-get install fping")
+    logger.info("For Red Hat/CentOS: sudo yum install fping")
+    logger.info("For macOS: brew install fping")
+    logger.info("Fping not supported on Windows,But code will work with ping command.")
+    system_exit = input("Press Enter to exit...")
+    sys.exit(1)
     
-def clear():
+check_fping_existence(logger)
+
+def clear(socends:int):
+  sleep(socends if socends > 0 else 0))
   os.system('cls' if os.name == 'nt' else 'clear')
 
 
@@ -34,56 +36,70 @@ def scan_hosts_ipv4(logger,input_ip:str,packets:int = 4,range_of_hosts:int=254,t
   
   alive_hosts = []
   
-  iterator = tqdm(ips, desc="Scanning hosts", unit="host") if not verbose else ips
   
   
-  for ip in iterator:
-    command = ["ping", "-c", str(packets), "-W", str(timeout), str(ip)]
-     
-    try:
+  # -c : Number of packets to send
+  # -t : Timeout in milliseconds
+  # -q : Quiet output (only summary)
+  # -a : Show alive hosts only
+  # -g : Generate list of IPs to ping
+  
+  command = ["fping","-a","-g", "-c", str(packets), "-t", str(timeout * 1000),"-q"] + [str(ip) for ip in ips]
+  
+  if verbose:
+    command.remove("-q")
+  try:
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    for line in result.stdout.splitlines():
+      if line.strip():
+        alive_hosts.append(line.strip())
+      else:
+        logger.Warning("No response received from some hosts. They may be offline or blocking ICMP requests.")
+  
+  if verbose:
+    logger.Info("Verbose mode enabled. Displaying detailed output:")
+    logger.info(result.stdout)
+    start_time = time() # to calculate the time taken for the scan
+  
+  except subprocess.TimeoutExpired:
+    logger.Error("Ping command timed out. Please check your network connection and try again.")
+       
+  except KeyboardInterrupt:
+    logger.Warning("Scan interrupted by user.")
+       
+    logger.info(f"Alive hosts: {len(alive_hosts)})")
+    
+    for n , host in enumerate(alive_hosts, start=1):
+      logger.info(f"{n}. {host}")
       
-       
-      result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,timeout= timeout + 1)
-       
-      if verbose:
-        logger.debug(f"Pinging {ip} with {packets} packets and timeout of {timeout} seconds...")
-        if result.returncode == 0:
-          logger.debug(f"Host {ip} is alive.)")
-          alive_hosts.append(str(ip))
-          
-        else:
-          logger.debug(f"Host {ip} is not responding.)")
+    clear(4)     
+    
+    return alive_hosts
       
-      
-    except subprocess.TimeoutExpired:
-      logger.Error("Ping command timed out. Please check your network connection and try again.")
-       
-    except KeyboardInterrupt:
-      logger.Warning("Scan interrupted by user.")
-       
-      logger.info(f"Alive hosts: {len(alive_hosts)})")
-       
-      for n , host in enumerate(alive_hosts, start=1):
-        logger.info(f"{n}. {host}")
-         
-      sleep(4)
-      clear()
-      return alive_hosts
-      
-    except Exception as e:
-      logger.Error(f"An error occurred while scanning: {e}")
+  except Exception as e:
+    logger.Error(f"An error occurred while scanning: {e}")
      
   logger.Info("Scan completed successfully.")
+  end_time = time()
+  
+  if verbose:
+    logger.info(f"Time taken for scan: {end_time - start_time:.2f} seconds")
+    
+  clear(3)
+
   logger.info(f"Alive hosts: {len(alive_hosts)})")
-  for n , host in enumerate(alive_hosts, start=1):
-    logger.info(f"{n}. {host}")
-  sleep(4)
-  clear()
+  if verbose:
+    logger.info("Alive hosts".center(30, "-")))
+    for n , host in enumerate(alive_hosts, start=1):
+      logger.info(f"{n}. {host}")
+      
+  clear(4)
   return alive_hosts
         
     
-def scan_hosts_ipv6(logger,input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4, verbose:bool=False):
-  pass
+#def scan_hosts_ipv6(logger,input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4, verbose:bool=False):
+  #pass
   
   
   
