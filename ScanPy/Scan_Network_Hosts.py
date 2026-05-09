@@ -6,6 +6,9 @@ from time import sleep,time
 import os
 import shutil
 
+
+print("Importand Note: This tool uses fping for scanning hosts. Ensure that fping is installed)")
+
 def check_fping_existence(logger):
   if shutil.which("fping") is None:
     logger.Error("fping is not installed. Please install fping to use this feature.")
