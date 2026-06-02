@@ -1,6 +1,6 @@
 import socket
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed  # corrected import
+from concurrent.futures import ThreadPoolExecutor, as_completed 
 
 
 def scan_single_host(host: str, ports: list, timeout=1, max_workers=100, verbose=False):
@@ -10,7 +10,7 @@ def scan_single_host(host: str, ports: list, timeout=1, max_workers=100, verbose
         print(f"[*] Scanning {host} for ports: {ports[:10]}... (total {len(ports)} ports)")
         print(f"[*] Using {max_workers} workers, timeout={timeout}s")
     
-    def scan_port(port):  # scan single port, not a list
+    def scan_port(port):
         try:
             scanner = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             scanner.settimeout(timeout)
@@ -29,7 +29,7 @@ def scan_single_host(host: str, ports: list, timeout=1, max_workers=100, verbose
                 print(f"[!] Error scanning port {port}: {e}")
             return None
     
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:  # ThreadPoolExecutor, not ThreadingPoolExecutor
+    with ThreadPoolExecutor(max_workers=max_workers) as executor: 
         future_to_port = {executor.submit(scan_port, port): port for port in ports}
         for future in as_completed(future_to_port):
             result = future.result()

@@ -21,7 +21,7 @@ def check_fping_existence(logger):
     sys.exit(1)
     
 
-def clear(socends:int):
+def clear(socends:int=0):
   sleep(socends if socends > 0 else 0)
   os.system('cls' if os.name == 'nt' else 'clear')
 
