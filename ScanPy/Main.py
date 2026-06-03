@@ -37,7 +37,8 @@ def scan_hosts(logger, network:str, packets:int, range_of_hosts:int, timeout:int
   
   return check_type(logger,network,packets,range_of_hosts,timeout,verbose)
 
-def scan
+def scan():
+  pass
 
 def main():
   parser = argparse.ArgumentParser(description="ScanPy: A powerful network scanning tool for IPv4 and IPv6 hosts.")
