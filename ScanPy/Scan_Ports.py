@@ -3,14 +3,15 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed 
 
 
-def scan_single_host(host: str, ports: list, timeout=1, max_workers=100, verbose=False):
+def scan_single_host(logger,host: str, ports: list, timeout=1, max_workers=100, verbose=False):
     open_ports = []
     
     if verbose:
-        print(f"[*] Scanning {host} for ports: {ports[:10]}... (total {len(ports)} ports)")
-        print(f"[*] Using {max_workers} workers, timeout={timeout}s")
+        logger.info(f"[*] Scanning host: {host}")
+        logger.info(f"[*] Ports to scan: {ports}")
+        logger.info(f"max_workers: {max_workers} , timeout: {timeout} seconds")
     
-    def scan_port(port):
+    def scan_port(logger,ports):
         try:
             scanner = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             scanner.settimeout(timeout)
@@ -21,12 +22,12 @@ def scan_single_host(host: str, ports: list, timeout=1, max_workers=100, verbose
             scanner.close()
             if result == 0:
                 if verbose:
-                    print(f"[+] Port {port} is open")
-                return port
+                    print(f"[+] Port {ports} is open")
+                return ports
             return None
         except Exception as e:
             if verbose:
-                print(f"[!] Error scanning port {port}: {e}")
+                print(f"[!] Error scanning port {ports}: {e}")
             return None
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor: 

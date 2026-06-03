@@ -17,8 +17,10 @@ def check_fping_existence(logger):
     logger.info("For Red Hat/CentOS: sudo yum install fping")
     logger.info("For macOS: brew install fping")
     logger.info("Fping not supported on Windows,But code will work with ping command.")
-    system_exit = input("Press Enter to exit...")
-    sys.exit(1)
+    return False
+  
+  else:
+    return True
     
 
 def clear(socends:int=0):

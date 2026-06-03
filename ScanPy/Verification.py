@@ -5,7 +5,7 @@ import ipaddress
 import sys
 
 #set up the logger
-def setup_logger(file_name:str = "scanning_log.log", verbose:bool = False):
+def setup_logger_file(file_name:str = "scanning_log.log", verbose:bool = False):
   logger = logging.getLogger('PortScanner')
   
   # check file extension 
@@ -30,7 +30,21 @@ def setup_logger(file_name:str = "scanning_log.log", verbose:bool = False):
   
   return logger
  
- 
+def setup_logger(verbose:bool = False):
+  logger = logging.getLogger('PortScanner')
+  
+  # preparing the output display
+  console_handler = logging.StreamHandler()
+  
+  console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+  
+  formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+  
+  console_handler.setFormatter(formatter)
+  
+  logger.addHandler(console_handler)
+  
+  return logger
 # set up the verification function to check user inputs
 def validate_and_parse_ip_cidr(input_ip: str, logger):
     input_str = input_ip.strip()
