@@ -5,6 +5,30 @@ from Verification import setup_logger, setup_logger_file
 from Scan_Network_Hosts import check_type, check_fping_existence
 from Scan_Ports import scan_multiple_hosts, scan_single_host
 
+project = """
+$$$$$$\   $$$$$$\   $$$$$$\  $$\   $$\ $$$$$$$\ $$\     $$\ 
+$$  __$$\ $$  __$$\ $$  __$$\ $$$\  $$ |$$  __$$\\$$\   $$  |
+$$ /  \__|$$ /  \__|$$ /  $$ |$$$$\ $$ |$$ |  $$ |\$$\ $$  / 
+\$$$$$$\  $$ |      $$$$$$$$ |$$ $$\$$ |$$$$$$$  | \$$$$  /  
+ \____$$\ $$ |      $$  __$$ |$$ \$$$$ |$$  ____/   \$$  /   
+$$\   $$ |$$ |  $$\ $$ |  $$ |$$ |\$$$ |$$ |         $$ |    
+\$$$$$$  |\$$$$$$  |$$ |  $$ |$$ | \$$ |$$ |         $$ |    
+ \______/  \______/ \__|  \__|\__|  \__|\__|         \__|    
+"""
+
+print("\033[34m" + project+ "\033[0m")
+
+print("""
+This tool devoloped by: Ali Mohammad
+
+Follow me on github: https://github.com/Ali-Mohammad1
+Follow me on linkedin: www.linkedin.com/in/ali-mohammed-7648b2406
+
+Help me to continue and improving my skills by your support and feedbacks.
+""")
+
+clear(3)
+
 def scan_hosts(logger, network: str, packets: int, range_of_hosts: int, timeout: int, verbose: bool) -> list:
     if not check_fping_existence(logger):
         logger.error("fping is not installed or not found in PATH. Please install fping to use the host scanning feature.")
