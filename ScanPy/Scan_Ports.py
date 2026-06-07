@@ -22,12 +22,15 @@ def scan_single_host(logger,host: str, ports: list, timeout=1, max_workers=100, 
             scanner.close()
             if result == 0:
                 if verbose:
-                    print(f"[+] Port {ports} is open")
+                    logger.info(f"[+] Port {ports} is open")
                 return ports
             return None
         except Exception as e:
             if verbose:
-                print(f"[!] Error scanning port {ports}: {e}")
+                logger.error(f"[!] Error scanning port {ports}: {e}")
+        except KeyboardInterrupt:
+            if verbose:
+                logger.warning("Scan interrupted by user.")
             return None
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor: 

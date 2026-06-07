@@ -11,7 +11,7 @@ print("Importand Note: This tool uses fping for scanning hosts. Ensure that fpin
 
 def check_fping_existence(logger):
   if shutil.which("fping") is None:
-    logger.Error("fping is not installed. Please install fping to use this feature.")
+    logger.error("fping is not installed. Please install fping to use this feature.")
     logger.info("You can install fping using the following command:")
     logger.info("For Debian/Ubuntu: sudo apt-get install fping")
     logger.info("For Red Hat/CentOS: sudo yum install fping")
@@ -28,14 +28,15 @@ def clear(socends:int=0):
   os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def scan_hosts_ipv4(logger, input_ip: str, packets: int = 4, range_of_hosts: int = 254, timeout: int = 4, verbose: bool = False):
-    logger.Info("Scanning IPv4 network...")
+def scan_hosts_ipv4(logger, network: str, packets: int = 4, range_of_hosts: int = 254, timeout: int = 4, verbose: bool = False):
+    logger.info("Scanning IPv4 network...")
     
-    if range_of_hosts > 254 or range_of_hosts <= 1:
+    if range_of_hosts > 254 or range_of_hosts <= 0 or range_of_hosts is None:
         range_of_hosts = 254
-        logger.Warning("Range of hosts must be between 1 and 254. Defaulting to 254.")
+        logger.warning("Range of hosts must be between 1 and 254. Defaulting to 254.")
+        logger.info("range of hosts has been reset to default value (254)")
     
-    ips = list(ipaddress.ip_network(validate_and_parse_ip_cidr(input_ip, logger), strict=False).hosts())[:range_of_hosts]
+    ips = list(ipaddress.ip_network(network, strict=False).hosts())[:range_of_hosts]
     
     alive_hosts = []
     
@@ -55,7 +56,7 @@ def scan_hosts_ipv4(logger, input_ip: str, packets: int = 4, range_of_hosts: int
         
         if verbose:
             # In verbose mode: display full output on screen
-            logger.Info("Verbose output from fping:")
+            logger.info("Verbose output from fping:")
             print(result.stdout)
             
             # Extract only active IPs from the output (without extra text)
@@ -69,17 +70,17 @@ def scan_hosts_ipv4(logger, input_ip: str, packets: int = 4, range_of_hosts: int
         
         # Log any warnings from stderr (e.g., ICMP errors)
         if result.stderr:
-            logger.Warning(f"fping stderr: {result.stderr}")
+            logger.warning(f"fping stderr: {result.stderr}")
             
     except subprocess.TimeoutExpired:
-        logger.Error("Ping command timed out. Please check your network connection and try again.")
+        logger.error("Ping command timed out. Please check your network connection and try again.")
     except KeyboardInterrupt:
-        logger.Warning("Scan interrupted by user.")
+        logger.warning("Scan interrupted by user.")
     except Exception as e:
-        logger.Error(f"An error occurred while scanning: {e}")
+        logger.error(f"An error occurred while scanning: {e}")
     
     # Final output (clean list)
-    logger.Info("Scan completed successfully.")
+    logger.info("Scan completed successfully.")
     logger.info(f"Alive hosts: {len(alive_hosts)}")
     if verbose:
         logger.info("Alive hosts list (clean):")
@@ -88,19 +89,19 @@ def scan_hosts_ipv4(logger, input_ip: str, packets: int = 4, range_of_hosts: int
     
     return alive_hosts
     
-def scan_hosts_ipv6(logger, input_ip: str, packets: int = 4, range_of_hosts: int = 254, timeout: int = 4, verbose: bool = False):
-    logger.Info("Scanning IPv6 network...")
+def scan_hosts_ipv6(logger, network: str, packets: int = 4, range_of_hosts: int = 254, timeout: int = 4, verbose: bool = False):
+    logger.info("Scanning IPv6 network...")
     
     # For IPv6, a typical /64 subnet has 2^64 hosts, so we limit the scan range
-    if range_of_hosts > 1000 or range_of_hosts <= 1:
-        range_of_hosts = 254
-        logger.Warning("Range of hosts must be between 1 and 1000 for IPv6. Defaulting to 254.")
-        logger.Info("Note: Scanning too many IPv6 addresses may be slow.")
+    if range_of_hosts <= 0 or range_of_hosts is None:
+        range_of_hosts = 500
+        logger.warning("Range of hosts must be a positive integer. Defaulting to 500.")
+        logger.info("range of hosts has been reset to default value (500)")
+        logger.info("Note: Scanning too many IPv6 addresses may be slow.")
     
-    # Generate IPv6 addresses from the given network (CIDR)
-    network = ipaddress.ip_network(validate_and_parse_ip_cidr(input_ip, logger), strict=False)
     # Convert hosts iterator to list and limit by range_of_hosts
-    all_hosts = list(network.hosts())
+    net = ipaddress.ip_network(network, strict=False)
+    all_hosts = list(net.hosts())
     if len(all_hosts) > range_of_hosts:
         all_hosts = all_hosts[:range_of_hosts]
     ips = [str(ip) for ip in all_hosts]
@@ -123,7 +124,7 @@ def scan_hosts_ipv6(logger, input_ip: str, packets: int = 4, range_of_hosts: int
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
         if verbose:
-            logger.Info("Verbose output from fping:")
+            logger.info("Verbose output from fping:")
             print(result.stdout)
             
             # Extract only active IPv6 addresses from lines containing "is alive"
@@ -136,16 +137,16 @@ def scan_hosts_ipv6(logger, input_ip: str, packets: int = 4, range_of_hosts: int
             alive_hosts = [line.strip() for line in result.stdout.splitlines() if line.strip()]
         
         if result.stderr:
-            logger.Warning(f"fping stderr: {result.stderr}")
+            logger.warning(f"fping stderr: {result.stderr}")
             
     except subprocess.TimeoutExpired:
-        logger.Error("Ping command timed out. Please check your network connection and try again.")
+        logger.error("Ping command timed out. Please check your network connection and try again.")
     except KeyboardInterrupt:
-        logger.Warning("Scan interrupted by user.")
+        logger.warning("Scan interrupted by user.")
     except Exception as e:
-        logger.Error(f"An error occurred while scanning: {e}")
+        logger.error(f"An error occurred while scanning: {e}")
     
-    logger.Info("Scan completed successfully.")
+    logger.info("Scan completed successfully.")
     logger.info(f"Alive hosts: {len(alive_hosts)}")
     if verbose:
         logger.info("Alive hosts list (clean):")
@@ -156,14 +157,16 @@ def scan_hosts_ipv6(logger, input_ip: str, packets: int = 4, range_of_hosts: int
   
   
   
-  
-def check_type(logger,input_ip:str,packets:int = 4,range_of_hosts:int= 254,timeout:int = 4,verbose:bool=False):
-  ip_add = ipaddress.ip_network(validate_and_parse_ip_cidr(input_ip, logger), strict=False)
-  
-  if ip_add.version == 4:
-    return scan_hosts_ipv4(logger,input_ip, packets ,range_of_hosts, timeout, verbose)
-  
-  elif ip_add.version == 6:
+def check_type(logger, input_ip: str, packets: int = 4, range_of_hosts: int = 254, timeout: int = 4, verbose: bool = False):
+
+    # Convert input to a proper network format (IP/CIDR) and validate it
+    parsed_network = validate_and_parse_ip_cidr(input_ip, logger,True)
     
-    return scan_hosts_ipv6(logger,input_ip,packets,range_of_hosts, timeout, verbose)
-  
+    # Create a network object to determine IP version (IPv4 or IPv6)
+    network = ipaddress.ip_network(parsed_network, strict=False)
+    
+    # Call the appropriate scanning function with the parsed network (not the raw input)
+    if network.version == 4:
+        return scan_hosts_ipv4(logger, parsed_network, packets, range_of_hosts, timeout, verbose)
+    else:  # IPv6
+        return scan_hosts_ipv6(logger, parsed_network, packets, range_of_hosts, timeout, verbose) 

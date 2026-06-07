@@ -1,6 +1,5 @@
 from pathlib import Path
 import logging
-import re
 import ipaddress
 import sys
 
@@ -45,11 +44,12 @@ def setup_logger(verbose:bool = False):
   logger.addHandler(console_handler)
   
   return logger
-# set up the verification function to check user inputs
-def validate_and_parse_ip_cidr(input_ip: str, logger):
+
+def validate_and_parse_ip_cidr(input_ip: str, logger, require_cidr: bool = True):
+
     input_str = input_ip.strip()
     
-    # the question is about cidr if it is not available in the input.
+    # Helper: ask user for CIDR (only when require_cidr=True)
     def ask_for_cidr(ip_str):
         try:
             ip_obj = ipaddress.ip_address(ip_str)
@@ -64,38 +64,64 @@ def validate_and_parse_ip_cidr(input_ip: str, logger):
         except Exception as e:
             logger.error(f"Invalid CIDR input: {e}")
             sys.exit(1)
-            
-    # the function to return the output
-    def parse_and_return(candidate):
+    
+    # Helper: parse and return normalized string
+    def parse_and_return(candidate, want_cidr):
         try:
-            iface = ipaddress.ip_interface(candidate)
-            return str(iface)
+            if want_cidr:
+                iface = ipaddress.ip_interface(candidate)
+                return str(iface)
+            else:
+                # Just an IP address (no CIDR)
+                ip = ipaddress.ip_address(candidate)
+                return str(ip)
         except ValueError as e:
-            logger.error(f"Invalid IP/CIDR: {candidate} - {e}")
+            logger.error(f"Invalid {'IP/CIDR' if want_cidr else 'IP'}: {candidate} - {e}")
             sys.exit(1)
-            
-    # check if the input contains a CIDR prefix
-    if '/' in input_str:
-        try:
-            ipaddress.ip_interface(input_str)
-            return input_str
-        except ValueError:
-            logger.error(f"Invalid IP/CIDR format: {input_str}. Please enter again.")
-            second = input("Enter valid IP/CIDR: ").strip()
-            return parse_and_return(second)
-    else:
-        try:
-            ipaddress.ip_address(input_str)
-            full = ask_for_cidr(input_str)
-            return parse_and_return(full)
-        except ValueError:
-            logger.error(f"Invalid IP address: {input_str}. Please enter again.")
-            second = input("Enter valid IP (without CIDR): ").strip()
+    
+    # Mode: require CIDR (for network scanning)
+    if require_cidr:
+        if '/' in input_str:
+            # Check if valid IP/CIDR
             try:
-                ipaddress.ip_address(second)
-                full = ask_for_cidr(second)
-                return parse_and_return(full)
+                ipaddress.ip_interface(input_str)
+                return input_str
             except ValueError:
-                logger.error(f"Invalid IP address again: {second}")
-                sys.exit(1)
-                
+                logger.error(f"Invalid IP/CIDR format: {input_str}. Please enter again.")
+                second = input("Enter valid IP/CIDR: ").strip()
+                return parse_and_return(second, want_cidr=True)
+        else:
+            # No CIDR provided, ask for it
+            try:
+                ipaddress.ip_address(input_str)
+                full = ask_for_cidr(input_str)
+                return parse_and_return(full, want_cidr=True)
+            except ValueError:
+                logger.error(f"Invalid IP address: {input_str}. Please enter again.")
+                second = input("Enter valid IP (without CIDR): ").strip()
+                try:
+                    ipaddress.ip_address(second)
+                    full = ask_for_cidr(second)
+                    return parse_and_return(full, want_cidr=True)
+                except ValueError:
+                    logger.error(f"Invalid IP address again: {second}")
+                    sys.exit(1)
+    else:
+        # Mode: single IP (no CIDR allowed)
+        if '/' in input_str:
+            logger.error("CIDR is not allowed in this mode. Please enter a single IP address (without /).")
+            sys.exit(1)
+        else:
+            # Validate as single IP
+            try:
+                ip = ipaddress.ip_address(input_str)
+                return str(ip)
+            except ValueError:
+                logger.error(f"Invalid IP address: {input_str}. Please enter a valid IPv4 or IPv6 address.")
+                second = input("Enter valid IP: ").strip()
+                try:
+                    ipaddress.ip_address(second)
+                    return str(ip)
+                except ValueError:
+                    logger.error(f"Invalid IP again: {second}")
+                    sys.exit(1)
