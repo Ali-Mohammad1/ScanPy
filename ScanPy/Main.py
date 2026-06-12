@@ -2,7 +2,7 @@ import socket
 import argparse
 import sys
 from Verification import setup_logger, setup_logger_file
-from Scan_Network_Hosts import check_type, check_fping_existence
+from Scan_Network_Hosts import check_type, check_fping_existence,clear
 from Scan_Ports import scan_multiple_hosts, scan_single_host
 
 project = """
