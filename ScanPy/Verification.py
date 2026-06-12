@@ -3,53 +3,32 @@ import logging
 import ipaddress
 import sys
 
-#set up the logger
-def setup_logger_file(file_name:str = "scanning_log.log", verbose:bool = False):
-  logger = logging.getLogger('PortScanner')
-  
-  # check file extension 
-  if not file_name.endswith('.log'):
-    file_name = str(Path(file_name).with_suffix('.log'))
-  
-  # preparing the log file
-  file_handler = logging.FileHandler(file_name)
-  file_handler.setLevel(logging.DEBUG)
-  formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-  file_handler.setFormatter(formatter)
-  logger.addHandler(file_handler)
-  
-  # preparing the output display
-  console_handler = logging.StreamHandler()
-  
-  console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
-  
-  console_handler.setFormatter(formatter)
-  
-  logger.addHandler(console_handler)
-  
-  return logger
- 
-def setup_logger(verbose:bool = False):
-  logger = logging.getLogger('PortScanner')
-  
-  # preparing the output display
-  console_handler = logging.StreamHandler()
-  
-  console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
-  
-  formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-  
-  console_handler.setFormatter(formatter)
-  
-  logger.addHandler(console_handler)
-  
-  return logger
+def setup_logger_file(file_name: str = "scanning_log.log", verbose: bool = False):
+    logger = logging.getLogger('PortScanner')
+    if not file_name.endswith('.log'):
+        file_name = str(Path(file_name).with_suffix('.log'))
+    file_handler = logging.FileHandler(file_name)
+    file_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    return logger
+
+def setup_logger(verbose: bool = False):
+    logger = logging.getLogger('PortScanner')
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    return logger
 
 def validate_and_parse_ip_cidr(input_ip: str, logger, require_cidr: bool = True):
-
     input_str = input_ip.strip()
-    
-    # Helper: ask user for CIDR (only when require_cidr=True)
     def ask_for_cidr(ip_str):
         try:
             ip_obj = ipaddress.ip_address(ip_str)
@@ -64,25 +43,19 @@ def validate_and_parse_ip_cidr(input_ip: str, logger, require_cidr: bool = True)
         except Exception as e:
             logger.error(f"Invalid CIDR input: {e}")
             sys.exit(1)
-    
-    # Helper: parse and return normalized string
     def parse_and_return(candidate, want_cidr):
         try:
             if want_cidr:
                 iface = ipaddress.ip_interface(candidate)
                 return str(iface)
             else:
-                # Just an IP address (no CIDR)
                 ip = ipaddress.ip_address(candidate)
                 return str(ip)
         except ValueError as e:
             logger.error(f"Invalid {'IP/CIDR' if want_cidr else 'IP'}: {candidate} - {e}")
             sys.exit(1)
-    
-    # Mode: require CIDR (for network scanning)
     if require_cidr:
         if '/' in input_str:
-            # Check if valid IP/CIDR
             try:
                 ipaddress.ip_interface(input_str)
                 return input_str
@@ -91,7 +64,6 @@ def validate_and_parse_ip_cidr(input_ip: str, logger, require_cidr: bool = True)
                 second = input("Enter valid IP/CIDR: ").strip()
                 return parse_and_return(second, want_cidr=True)
         else:
-            # No CIDR provided, ask for it
             try:
                 ipaddress.ip_address(input_str)
                 full = ask_for_cidr(input_str)
@@ -107,12 +79,10 @@ def validate_and_parse_ip_cidr(input_ip: str, logger, require_cidr: bool = True)
                     logger.error(f"Invalid IP address again: {second}")
                     sys.exit(1)
     else:
-        # Mode: single IP (no CIDR allowed)
         if '/' in input_str:
             logger.error("CIDR is not allowed in this mode. Please enter a single IP address (without /).")
             sys.exit(1)
         else:
-            # Validate as single IP
             try:
                 ip = ipaddress.ip_address(input_str)
                 return str(ip)
