@@ -16,7 +16,7 @@ $$\   $$ |$$ |  $$\ $$ |  $$ |$$ |\$$$ |$$ |         $$ |
  \______/  \______/ \__|  \__|\__|  \__|\__|         \__|    
 """
 
-print("\033[34m" + project+ "\033[0m")
+print(project)
 
 print("""
 This tool devoloped by: Ali Mohammad
